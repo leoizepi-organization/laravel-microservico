@@ -81,9 +81,12 @@
 
             <div class="content">
                 <div class="title m-b-md">
-                    Laravel
+                    Laravel - Microserviço
                 </div>
-
+                <h4>
+                    {{ date('d/m/Y H:i:s') }}
+                </h4>
+                <br />
                 <div class="links">
                     <a href="https://laravel.com/docs">Docs</a>
                     <a href="https://laracasts.com">Laracasts</a>
