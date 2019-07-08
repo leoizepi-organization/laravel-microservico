@@ -1,21 +1,31 @@
-version: '2.3'
+version: '3'
 
 services:
 
     app:
         build: .
         container_name: app
+        entrypoint: dockerize -template ./.docker/app/.env:.env -wait tcp://db:3306 -timeout 40s ./.docker/entrypoint.sh
+        environment:
+            - DB_HOST=db
+            - DB_DATABASE=laravel_microservico
+            - DB_USERNAME=root
+            - DB_PASSWORD=root
         volumes:
             - .:/var/www/
         networks:
             - app-newtwork
         depends_on:
-            db:
-                condition: service_healthy
+            - db
+            - redis
 
     nginx:
         build: .docker/nginx
         container_name: nginx
+        entrypoint: dockerize -template ./.docker/app/nginx.conf:./.docker/nginx/nginx.conf  ./.docker/entrypoint-nginx.sh
+        environment:
+            - HOST=app
+            - PORT=9000
         restart: always
         tty: true
         ports:
@@ -24,6 +34,8 @@ services:
             - .:/var/www
         networks:
             - app-newtwork
+        depends_on:
+            - app
 
     db:
         image: mysql:5.7
@@ -41,11 +53,6 @@ services:
             - MYSQL_ROOT_PASSWORD=root
         networks:
             - app-newtwork
-        healthcheck:
-            test: ["CMD-SHELL", 'mysql -uroot --database=laravel_microservico --password=root --execute="SELECT count(table_name) > 0 FROM information_schema.tables;" --skip-column-names -B']
-            interval: 10s
-            timeout: 10s
-            retries: 4
 
     redis:
         image: redis
@@ -53,7 +60,6 @@ services:
           - 6379
         networks:
           - app-newtwork
-
 
 networks:
     app-newtwork:
